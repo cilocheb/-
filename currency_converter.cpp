@@ -1,4 +1,4 @@
-﻿#define NOMINMAX  // Отключаем min/max макросы Windows
+﻿#define NOMINMAX  
 #include <iostream>
 #include <string>
 #include <map>
@@ -9,21 +9,21 @@
 #include <vector>
 #include <windows.h>
 #include <winhttp.h>
-#include "json.hpp"  // Убедитесь, что файл в папке проекта!
+#include "json.hpp"  
 
 #pragma comment(lib, "winhttp.lib")
 
 using namespace std;
 using json = nlohmann::json;
 
-// Функция для выполнения HTTP-запросов
+
 string http_get(const string& url) {
     string result;
     HINTERNET hSession = NULL;
     HINTERNET hConnect = NULL;
     HINTERNET hRequest = NULL;
 
-    // Разбор URL
+    
     URL_COMPONENTS urlComp = { 0 };
     urlComp.dwStructSize = sizeof(urlComp);
     urlComp.dwHostNameLength = -1;
@@ -36,14 +36,14 @@ string http_get(const string& url) {
         return "";
     }
 
-    // Извлечение компонентов URL
+   
     wstring host(urlComp.lpszHostName, urlComp.dwHostNameLength);
     wstring path(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
     if (urlComp.dwExtraInfoLength) {
         path += wstring(urlComp.lpszExtraInfo, urlComp.dwExtraInfoLength);
     }
 
-    // Открытие сессии
+    
     hSession = WinHttpOpen(L"CurrencyConverter/1.0",
         WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
         WINHTTP_NO_PROXY_NAME,
@@ -53,7 +53,7 @@ string http_get(const string& url) {
         return "";
     }
 
-    // Подключение к серверу
+    
     hConnect = WinHttpConnect(hSession, host.c_str(),
         urlComp.nPort, 0);
     if (!hConnect) {
@@ -62,7 +62,7 @@ string http_get(const string& url) {
         return "";
     }
 
-    // Создание запроса
+    
     DWORD flags = (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ?
         WINHTTP_FLAG_SECURE : 0;
     hRequest = WinHttpOpenRequest(hConnect, L"GET", path.c_str(),
@@ -76,7 +76,7 @@ string http_get(const string& url) {
         return "";
     }
 
-    // Отправка запроса
+    
     if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
         WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
         cerr << "Error WinHttpSendRequest: " << GetLastError() << endl;
@@ -86,7 +86,7 @@ string http_get(const string& url) {
         return "";
     }
 
-    // Получение ответа
+    
     if (!WinHttpReceiveResponse(hRequest, NULL)) {
         cerr << "Error WinHttpReceiveResponse: " << GetLastError() << endl;
         WinHttpCloseHandle(hRequest);
@@ -95,12 +95,12 @@ string http_get(const string& url) {
         return "";
     }
 
-    // Чтение данных ответа
+    
     DWORD dwSize = 0;
     DWORD dwDownloaded = 0;
     vector<char> buffer;
     do {
-        // Проверка доступных данных
+       
         if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) {
             cerr << "Error WinHttpQueryDataAvailable: " << GetLastError() << endl;
             break;
@@ -108,20 +108,20 @@ string http_get(const string& url) {
 
         if (dwSize == 0) break;
 
-        // Чтение данных
+        
         buffer.resize(dwSize + 1);
         if (!WinHttpReadData(hRequest, buffer.data(), dwSize, &dwDownloaded)) {
             cerr << "WinHttpReadData Error:" << GetLastError() << endl;
             break;
         }
 
-        // Добавление данных в результат
+        
         if (dwDownloaded > 0) {
             result.append(buffer.data(), dwDownloaded);
         }
     } while (dwSize > 0);
 
-    // Закрытие дескрипторов
+    
     if (hRequest) WinHttpCloseHandle(hRequest);
     if (hConnect) WinHttpCloseHandle(hConnect);
     if (hSession) WinHttpCloseHandle(hSession);
@@ -206,7 +206,7 @@ string input_currency_code(const string& prompt, const map<string, string>& curr
         cout << prompt;
         cin >> code;
 
-        // Конвертируем в верхний регистр
+        
         for (char& c : code) c = toupper(c);
 
         if (currencies.find(code) != currencies.end()) {
